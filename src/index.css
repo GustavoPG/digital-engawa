@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-plus-jakarta: "Plus Jakarta Sans", sans-serif;
+  --font-inter: "Inter", sans-serif;
+
+  --color-primary: #136964;
+  --color-primary-container: #a4f0e9;
+  --color-on-primary: #dbfffa;
+  
+  --color-surface: #f9f9f9;
+  --color-surface-container: #ebeeef;
+  --color-surface-container-low: #f2f4f4;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-high: #e4e9ea;
+  --color-surface-container-highest: #dde4e5;
+  
+  --color-on-surface: #2d3435;
+  --color-on-surface-variant: #5a6061;
+  
+  --color-error: #9f403d;
+  --color-error-container: #fe8983;
+
+  --radius-lg: 2rem;
+  --radius-xl: 3rem;
+}
+
+@layer base {
+  body {
+    @apply bg-surface text-on-surface font-inter antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-plus-jakarta tracking-tight;
+  }
+}
+
+.kanji-display {
+  font-size: 8rem;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.glass-panel {
+  @apply bg-surface-container-lowest/80 backdrop-blur-xl;
+}
