@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Play, Volume2, ArrowRight, Layers, Flame, Clock, Zap, Plus } from 'lucide-react';
 import { motion } from 'motion/react';
 import { StatCard } from '../components/StatCard';
-import { n5KanjiData, KanjiEntry } from '../data/n5';
+import { n5KanjiData } from '../data/n5';
+import { n4KanjiData } from '../data/n4';
+import { KanjiEntry } from '../types/kanji';
 
 interface DashboardProps {
   onNavigate: (page: string) => void;
@@ -12,9 +14,10 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
   const [kanjiDelDia, setKanjiDelDia] = useState<KanjiEntry | null>(null);
 
   useEffect(() => {
-    // Select a random kanji on mount
-    const randomIndex = Math.floor(Math.random() * n5KanjiData.length);
-    setKanjiDelDia(n5KanjiData[randomIndex]);
+    // Select a random kanji on mount from both N5 and N4
+    const allKanji = [...n5KanjiData, ...n4KanjiData];
+    const randomIndex = Math.floor(Math.random() * allKanji.length);
+    setKanjiDelDia(allKanji[randomIndex]);
   }, []);
 
   return (
@@ -28,7 +31,10 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
           {kanjiDelDia ? (
             <>
               {/* Kanji Display */}
-              <div className="flex-shrink-0 flex flex-col items-center">
+              <div className="flex-shrink-0 flex flex-col items-center relative">
+                <div className="absolute top-0 right-0 px-3 py-1 bg-surface-container-high rounded-full text-xs font-bold text-on-surface-variant translate-x-1/2 -translate-y-1/2 z-10">
+                  {kanjiDelDia.level}
+                </div>
                 <span className="text-xs font-bold tracking-[0.2em] text-primary/40 uppercase mb-8">KANJI DEL DÍA</span>
                 <div className="relative flex items-center justify-center">
                   <div className="absolute w-64 h-64 border border-primary/5 rounded-full animate-[spin_20s_linear_infinite]" />
