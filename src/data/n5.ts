@@ -164,4 +164,5 @@ export const n5KanjiData: KanjiEntry[] = [
       { word: '土', reading: 'つち', meaning: 'Tierra / Suelo' }
     ]
   }
+
 ];
