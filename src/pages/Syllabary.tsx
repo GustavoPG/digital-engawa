@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Volume2, X } from 'lucide-react';
 import { gojuonData, KanaEntry } from '../data/kana';
+import { WritingCanvas } from '../components/WritingCanvas';
 
 export const Syllabary = () => {
   const [activeTab, setActiveTab] = useState<'hiragana' | 'katakana'>('hiragana');
@@ -69,20 +70,11 @@ export const Syllabary = () => {
             </div>
 
             <div className="p-12 flex flex-col items-center">
-              <div className="relative w-48 h-48 border-2 border-dashed border-primary/20 rounded-xl flex items-center justify-center mb-8 bg-primary/5">
-                 {/* Representación visual para el orden de trazos */}
-                <div className="absolute inset-0 grid grid-cols-2 grid-rows-2">
-                  <div className="border-r border-b border-primary/10"></div>
-                  <div className="border-b border-primary/10"></div>
-                  <div className="border-r border-primary/10"></div>
-                  <div></div>
-                </div>
-                <span className="text-[8rem] font-light z-10 select-none text-primary">
-                  {activeTab === 'hiragana' ? selectedKana.hiragana : selectedKana.katakana}
-                </span>
+              <div className="mb-6">
+                <WritingCanvas character={activeTab === 'hiragana' ? selectedKana.hiragana : selectedKana.katakana} size={220} />
               </div>
 
-              <p className="text-3xl font-bold mb-8">{selectedKana.romaji}</p>
+              <p className="text-3xl font-bold mb-6">{selectedKana.romaji}</p>
 
               <button
                 onClick={() => playAudio(selectedKana.romaji)}

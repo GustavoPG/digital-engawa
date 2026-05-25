@@ -5,6 +5,7 @@ import { StatCard } from '../components/StatCard';
 import { n5KanjiData } from '../data/n5';
 import { n4KanjiData } from '../data/n4';
 import { KanjiEntry } from '../types/kanji';
+import { WritingCanvas } from '../components/WritingCanvas';
 
 interface DashboardProps {
   onNavigate: (page: string) => void;
@@ -78,20 +79,10 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
                 </div>
               </div>
 
-              {/* Stroke Analysis Placeholder */}
-              <div className="hidden lg:block w-72 h-72 rounded-lg bg-surface-container-low relative overflow-hidden">
-                <div className="absolute inset-0 flex items-center justify-center opacity-10">
-                  <Layers size={120} />
-                </div>
-                <img
-                  src="https://picsum.photos/seed/ink/400/400?grayscale"
-                  alt="Texture"
-                  className="w-full h-full object-cover opacity-5"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute bottom-6 left-6">
-                  <p className="text-xs font-bold text-on-surface-variant/40">ANÁLISIS DE TRAZOS</p>
-                </div>
+              {/* Interactive Writing Canvas */}
+              <div className="hidden lg:flex flex-col items-center">
+                <span className="text-[10px] font-bold tracking-[0.2em] text-on-surface-variant/40 uppercase mb-3">PRACTICA LA ESCRITURA</span>
+                <WritingCanvas character={kanjiDelDia.kanji} size={256} />
               </div>
             </>
           ) : (

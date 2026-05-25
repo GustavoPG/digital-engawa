@@ -7,6 +7,7 @@ import { Practice } from './pages/Practice';
 import { Dictionary } from './pages/Dictionary';
 import { Progress } from './pages/Progress';
 import { Syllabary } from './pages/Syllabary';
+import { AiSensei } from './pages/AiSensei';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -25,6 +26,8 @@ export default function App() {
         return <Progress />;
       case 'syllabary':
         return <Syllabary />;
+      case 'aisensei':
+        return <AiSensei />;
       default:
         return <Dashboard onNavigate={setCurrentPage} />;
     }

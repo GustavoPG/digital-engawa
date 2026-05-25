@@ -3,6 +3,7 @@ import { Search, X } from 'lucide-react';
 import { n5KanjiData } from '../data/n5';
 import { n4KanjiData } from '../data/n4';
 import { KanjiEntry } from '../types/kanji';
+import { WritingCanvas } from '../components/WritingCanvas';
 
 export const Dictionary = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -97,7 +98,7 @@ export const Dictionary = () => {
 
       {selectedKanji && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-scrim/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setSelectedKanji(null)}>
-          <div className="bg-surface-container-lowest rounded-3xl max-w-md w-full p-8 shadow-2xl relative" onClick={e => e.stopPropagation()}>
+          <div className="bg-surface-container-lowest rounded-3xl max-w-2xl w-full p-8 shadow-2xl relative" onClick={e => e.stopPropagation()}>
             <button
               onClick={() => setSelectedKanji(null)}
               className="absolute top-6 right-6 p-2 rounded-full hover:bg-surface-container-low transition-colors text-on-surface-variant"
@@ -105,39 +106,50 @@ export const Dictionary = () => {
               <X size={24} />
             </button>
 
-            <div className="text-center mb-8">
-              <div className="text-8xl font-light mb-4 select-none">{selectedKanji.kanji}</div>
-              <p className="text-2xl font-bold">{selectedKanji.meaning}</p>
-              <p className="text-on-surface-variant">Romaji: {selectedKanji.romaji}</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-6 mb-8">
-              <div className="bg-surface-container-low p-4 rounded-xl">
-                <span className="text-xs font-bold text-primary tracking-widest uppercase opacity-60 block mb-1">Onyomi</span>
-                <p className="font-semibold text-lg">{selectedKanji.onyomi}</p>
-              </div>
-              <div className="bg-surface-container-low p-4 rounded-xl">
-                <span className="text-xs font-bold text-primary tracking-widest uppercase opacity-60 block mb-1">Kunyomi</span>
-                <p className="font-semibold text-lg">{selectedKanji.kunyomi || '-'}</p>
-              </div>
-            </div>
-
-            {selectedKanji.examples && selectedKanji.examples.length > 0 && (
-              <div>
-                <h4 className="font-bold text-lg mb-4">Ejemplos de Vocabulario</h4>
-                <div className="space-y-3">
-                  {selectedKanji.examples.map((ex, i) => (
-                    <div key={i} className="flex justify-between items-center bg-surface-container-lowest border border-surface-container-low p-3 rounded-lg">
-                      <div>
-                        <p className="font-bold text-lg">{ex.word}</p>
-                        <p className="text-xs text-on-surface-variant">{ex.reading}</p>
-                      </div>
-                      <span className="text-sm text-right max-w-[50%]">{ex.meaning}</span>
-                    </div>
-                  ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Left Column: Details */}
+              <div className="space-y-6">
+                <div className="text-center md:text-left">
+                  <div className="text-7xl font-light mb-2 select-none md:hidden">{selectedKanji.kanji}</div>
+                  <p className="text-3xl font-extrabold">{selectedKanji.meaning}</p>
+                  <p className="text-on-surface-variant">Romaji: {selectedKanji.romaji}</p>
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-surface-container-low p-4 rounded-xl">
+                    <span className="text-xs font-bold text-primary tracking-widest uppercase opacity-60 block mb-1">Onyomi</span>
+                    <p className="font-semibold text-base">{selectedKanji.onyomi}</p>
+                  </div>
+                  <div className="bg-surface-container-low p-4 rounded-xl">
+                    <span className="text-xs font-bold text-primary tracking-widest uppercase opacity-60 block mb-1">Kunyomi</span>
+                    <p className="font-semibold text-base">{selectedKanji.kunyomi || '-'}</p>
+                  </div>
+                </div>
+
+                {selectedKanji.examples && selectedKanji.examples.length > 0 && (
+                  <div>
+                    <h4 className="font-bold text-sm uppercase tracking-wider text-on-surface-variant/60 mb-3">Ejemplos</h4>
+                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                      {selectedKanji.examples.map((ex, i) => (
+                        <div key={i} className="flex justify-between items-center bg-surface-container-low p-3 rounded-lg text-sm">
+                          <div>
+                            <p className="font-bold text-base">{ex.word}</p>
+                            <p className="text-xs text-on-surface-variant">{ex.reading}</p>
+                          </div>
+                          <span className="text-xs text-right max-w-[50%]">{ex.meaning}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+
+              {/* Right Column: Writing Practice Canvas */}
+              <div className="flex flex-col items-center justify-center border-t md:border-t-0 md:border-l border-surface-container-high pt-6 md:pt-0 md:pl-8">
+                <span className="text-[10px] font-bold tracking-[0.2em] text-on-surface-variant/40 uppercase mb-3">PRÁCTICA DE ESCRITURA</span>
+                <WritingCanvas character={selectedKanji.kanji} size={220} />
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -6,7 +6,8 @@ import {
   BarChart3,
   Settings,
   LogOut,
-  Leaf
+  Leaf,
+  Sparkles
 } from 'lucide-react';
 
 interface NavItemProps {
@@ -48,6 +49,7 @@ export const Sidebar = ({ currentPage, onNavigate }: SidebarProps) => (
       <NavItem icon={<BookOpen size={20} />} label="Lecciones" active={currentPage === 'lessons'} onClick={() => onNavigate('lessons')} />
       <NavItem icon={<Dumbbell size={20} />} label="Práctica" active={currentPage === 'practice'} onClick={() => onNavigate('practice')} />
       <NavItem icon={<Languages size={20} />} label="Diccionario" active={currentPage === 'dictionary'} onClick={() => onNavigate('dictionary')} />
+      <NavItem icon={<Sparkles size={20} />} label="AI Sensei" active={currentPage === 'aisensei'} onClick={() => onNavigate('aisensei')} />
       <NavItem icon={<BarChart3 size={20} />} label="Progreso" active={currentPage === 'progress'} onClick={() => onNavigate('progress')} />
     </nav>
 
