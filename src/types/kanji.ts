@@ -10,6 +10,6 @@ export interface KanjiEntry {
   kunyomi: string;
   meaning: string;
   romaji: string;
-  level: 'N5' | 'N4';
+  level: 'N5' | 'N4' | 'N3' | 'N2' | 'N1';
   examples?: KanjiExample[];
 }

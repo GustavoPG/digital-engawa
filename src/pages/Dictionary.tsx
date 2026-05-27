@@ -2,19 +2,33 @@ import React, { useState, useMemo } from 'react';
 import { Search, X } from 'lucide-react';
 import { n5KanjiData } from '../data/n5';
 import { n4KanjiData } from '../data/n4';
+import { n3KanjiData } from '../data/n3';
+import { n2KanjiData } from '../data/n2';
+import { n1KanjiData } from '../data/n1';
 import { KanjiEntry } from '../types/kanji';
 import { WritingCanvas } from '../components/WritingCanvas';
 
 export const Dictionary = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedLevel, setSelectedLevel] = useState<'N5' | 'N4' | 'ALL'>('ALL');
+  const [selectedLevel, setSelectedLevel] = useState<'N5' | 'N4' | 'N3' | 'N2' | 'N1' | 'ALL'>('ALL');
   const [selectedKanji, setSelectedKanji] = useState<KanjiEntry | null>(null);
 
   const filteredKanji = useMemo(() => {
     let baseData: KanjiEntry[] = [];
     if (selectedLevel === 'N5') baseData = n5KanjiData;
     else if (selectedLevel === 'N4') baseData = n4KanjiData;
-    else baseData = [...n5KanjiData, ...n4KanjiData];
+    else if (selectedLevel === 'N3') baseData = n3KanjiData;
+    else if (selectedLevel === 'N2') baseData = n2KanjiData;
+    else if (selectedLevel === 'N1') baseData = n1KanjiData;
+    else {
+      baseData = [
+        ...n5KanjiData,
+        ...n4KanjiData,
+        ...n3KanjiData,
+        ...n2KanjiData,
+        ...n1KanjiData
+      ];
+    }
 
     if (!searchQuery.trim()) return baseData;
 
@@ -32,7 +46,7 @@ export const Dictionary = () => {
     <div>
       <h2 className="text-3xl font-bold tracking-tight mb-8">Diccionario JLPT</h2>
 
-      <div className="flex gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-6">
         <button
           onClick={() => setSelectedLevel('ALL')}
           className={`px-4 py-2 rounded-full font-semibold transition-colors ${selectedLevel === 'ALL' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface hover:bg-surface-container-highest'}`}
@@ -50,6 +64,24 @@ export const Dictionary = () => {
           className={`px-4 py-2 rounded-full font-semibold transition-colors ${selectedLevel === 'N4' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface hover:bg-surface-container-highest'}`}
         >
           N4
+        </button>
+        <button
+          onClick={() => setSelectedLevel('N3')}
+          className={`px-4 py-2 rounded-full font-semibold transition-colors ${selectedLevel === 'N3' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface hover:bg-surface-container-highest'}`}
+        >
+          N3
+        </button>
+        <button
+          onClick={() => setSelectedLevel('N2')}
+          className={`px-4 py-2 rounded-full font-semibold transition-colors ${selectedLevel === 'N2' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface hover:bg-surface-container-highest'}`}
+        >
+          N2
+        </button>
+        <button
+          onClick={() => setSelectedLevel('N1')}
+          className={`px-4 py-2 rounded-full font-semibold transition-colors ${selectedLevel === 'N1' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface hover:bg-surface-container-highest'}`}
+        >
+          N1
         </button>
       </div>
 

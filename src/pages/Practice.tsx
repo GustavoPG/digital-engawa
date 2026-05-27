@@ -14,6 +14,9 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { n5KanjiData } from '../data/n5';
 import { n4KanjiData } from '../data/n4';
+import { n3KanjiData } from '../data/n3';
+import { n2KanjiData } from '../data/n2';
+import { n1KanjiData } from '../data/n1';
 import { KanjiEntry } from '../types/kanji';
 
 interface SrsRecord {
@@ -27,7 +30,7 @@ interface SrsRecord {
 type SessionMode = 'DUE_REVIEW' | 'LEARN_NEW' | 'FREE_STUDY' | null;
 
 export const Practice = () => {
-  const [selectedLevel, setSelectedLevel] = useState<'N5' | 'N4' | 'ALL'>('ALL');
+  const [selectedLevel, setSelectedLevel] = useState<'N5' | 'N4' | 'N3' | 'N2' | 'N1' | 'ALL'>('ALL');
   
   // SRS data loaded from localStorage
   const [srsData, setSrsData] = useState<Record<string, SrsRecord>>({});
@@ -97,7 +100,16 @@ export const Practice = () => {
   const fullLevelData = useMemo(() => {
     if (selectedLevel === 'N5') return n5KanjiData;
     if (selectedLevel === 'N4') return n4KanjiData;
-    return [...n5KanjiData, ...n4KanjiData];
+    if (selectedLevel === 'N3') return n3KanjiData;
+    if (selectedLevel === 'N2') return n2KanjiData;
+    if (selectedLevel === 'N1') return n1KanjiData;
+    return [
+      ...n5KanjiData,
+      ...n4KanjiData,
+      ...n3KanjiData,
+      ...n2KanjiData,
+      ...n1KanjiData
+    ];
   }, [selectedLevel]);
 
   // Classify Kanjis into SRS states
@@ -248,24 +260,42 @@ export const Practice = () => {
               </div>
 
               {/* Level Selector */}
-              <div className="bg-surface-container-low p-1 rounded-full flex self-start">
+              <div className="bg-surface-container-low p-1 rounded-2xl md:rounded-full flex flex-wrap gap-1 self-start">
                 <button
                   onClick={() => setSelectedLevel('ALL')}
-                  className={`px-5 py-2 rounded-full font-bold text-xs transition-colors ${selectedLevel === 'ALL' ? 'bg-surface-container-lowest shadow-sm text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
+                  className={`px-4 py-2 md:px-5 md:py-2 rounded-full font-bold text-xs transition-colors ${selectedLevel === 'ALL' ? 'bg-surface-container-lowest shadow-sm text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
                 >
                   Todos
                 </button>
                 <button
                   onClick={() => setSelectedLevel('N5')}
-                  className={`px-5 py-2 rounded-full font-bold text-xs transition-colors ${selectedLevel === 'N5' ? 'bg-surface-container-lowest shadow-sm text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
+                  className={`px-4 py-2 md:px-5 md:py-2 rounded-full font-bold text-xs transition-colors ${selectedLevel === 'N5' ? 'bg-surface-container-lowest shadow-sm text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
                 >
                   N5
                 </button>
                 <button
                   onClick={() => setSelectedLevel('N4')}
-                  className={`px-5 py-2 rounded-full font-bold text-xs transition-colors ${selectedLevel === 'N4' ? 'bg-surface-container-lowest shadow-sm text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
+                  className={`px-4 py-2 md:px-5 md:py-2 rounded-full font-bold text-xs transition-colors ${selectedLevel === 'N4' ? 'bg-surface-container-lowest shadow-sm text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
                 >
                   N4
+                </button>
+                <button
+                  onClick={() => setSelectedLevel('N3')}
+                  className={`px-4 py-2 md:px-5 md:py-2 rounded-full font-bold text-xs transition-colors ${selectedLevel === 'N3' ? 'bg-surface-container-lowest shadow-sm text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
+                >
+                  N3
+                </button>
+                <button
+                  onClick={() => setSelectedLevel('N2')}
+                  className={`px-4 py-2 md:px-5 md:py-2 rounded-full font-bold text-xs transition-colors ${selectedLevel === 'N2' ? 'bg-surface-container-lowest shadow-sm text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
+                >
+                  N2
+                </button>
+                <button
+                  onClick={() => setSelectedLevel('N1')}
+                  className={`px-4 py-2 md:px-5 md:py-2 rounded-full font-bold text-xs transition-colors ${selectedLevel === 'N1' ? 'bg-surface-container-lowest shadow-sm text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
+                >
+                  N1
                 </button>
               </div>
             </div>

@@ -4,6 +4,9 @@ import { motion } from 'motion/react';
 import { StatCard } from '../components/StatCard';
 import { n5KanjiData } from '../data/n5';
 import { n4KanjiData } from '../data/n4';
+import { n3KanjiData } from '../data/n3';
+import { n2KanjiData } from '../data/n2';
+import { n1KanjiData } from '../data/n1';
 import { KanjiEntry } from '../types/kanji';
 import { WritingCanvas } from '../components/WritingCanvas';
 
@@ -15,8 +18,14 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
   const [kanjiDelDia, setKanjiDelDia] = useState<KanjiEntry | null>(null);
 
   useEffect(() => {
-    // Select a random kanji on mount from both N5 and N4
-    const allKanji = [...n5KanjiData, ...n4KanjiData];
+    // Select a random kanji on mount from all levels N5 to N1
+    const allKanji = [
+      ...n5KanjiData,
+      ...n4KanjiData,
+      ...n3KanjiData,
+      ...n2KanjiData,
+      ...n1KanjiData
+    ];
     const randomIndex = Math.floor(Math.random() * allKanji.length);
     setKanjiDelDia(allKanji[randomIndex]);
   }, []);
