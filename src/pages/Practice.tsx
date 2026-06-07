@@ -196,17 +196,19 @@ export const Practice = () => {
 
     // Calculate updated SM-2 values
     const updated = calculateSM2(
-      quality, 
-      existingRecord.easiness, 
-      existingRecord.repetitions, 
+      quality,
+      existingRecord.easiness,
+      existingRecord.repetitions,
       existingRecord.interval
     );
 
-    // Save record persistently in state and localStorage
-    saveSrsRecord({
-      kanji: currentKanji.kanji,
-      ...updated
-    });
+    // Free study sessions don't affect the SRS schedule
+    if (sessionMode !== 'FREE_STUDY') {
+      saveSrsRecord({
+        kanji: currentKanji.kanji,
+        ...updated
+      });
+    }
 
     // Rotate or advance the session queue
     if (quality < 3) {

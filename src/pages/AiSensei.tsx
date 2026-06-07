@@ -153,8 +153,25 @@ SIEMPRE debes estructurar tus respuestas utilizando exactamente el siguiente for
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
+  // getVoices() is async in most browsers — voices load after the page and fire voiceschanged.
+  // This helper waits for the list to be populated before resolving.
+  const getJapaneseVoice = (): Promise<SpeechSynthesisVoice | null> =>
+    new Promise((resolve) => {
+      const synth = window.speechSynthesis;
+      const pick = () => synth.getVoices().find(v => v.lang.startsWith('ja')) ?? null;
+      const voices = synth.getVoices();
+      if (voices.length > 0) {
+        resolve(pick());
+        return;
+      }
+      synth.onvoiceschanged = () => {
+        synth.onvoiceschanged = null;
+        resolve(pick());
+      };
+    });
+
   // Handle Voice Synthesis
-  const playVoice = (text: string, messageId: string) => {
+  const playVoice = async (text: string, messageId: string) => {
     if (isPlayingVoice === messageId) {
       window.speechSynthesis.cancel();
       setIsPlayingVoice(null);
@@ -162,30 +179,19 @@ SIEMPRE debes estructurar tus respuestas utilizando exactamente el siguiente for
     }
 
     window.speechSynthesis.cancel();
-    
-    // Clean text to extract only the Japanese parts (removing furigana in parenthesis for better pronunciation if possible)
-    // SpeechSynthesis handles Japanese Kanji/Kana very well on its own. We just clean up any English/Spanish comments if any.
+
     const cleanedText = text
-      .replace(/\(.*?\)/g, '') // remove contents in parenthesis (furigana guides)
+      .replace(/\(.*?\)/g, '') // remove furigana guides in parentheses
       .trim();
 
     const utterance = new SpeechSynthesisUtterance(cleanedText);
     utterance.lang = 'ja-JP';
-    
-    // Try to select a Japanese female voice if available
-    const voices = window.speechSynthesis.getVoices();
-    const jaVoice = voices.find(v => v.lang.startsWith('ja'));
-    if (jaVoice) {
-      utterance.voice = jaVoice;
-    }
 
-    utterance.onend = () => {
-      setIsPlayingVoice(null);
-    };
+    const jaVoice = await getJapaneseVoice();
+    if (jaVoice) utterance.voice = jaVoice;
 
-    utterance.onerror = () => {
-      setIsPlayingVoice(null);
-    };
+    utterance.onend = () => setIsPlayingVoice(null);
+    utterance.onerror = () => setIsPlayingVoice(null);
 
     setIsPlayingVoice(messageId);
     window.speechSynthesis.speak(utterance);
@@ -202,10 +208,12 @@ SIEMPRE debes estructurar tus respuestas utilizando exactamente el siguiente for
     setIsLoading(true);
 
     try {
-      // Build conversation history for the model
+      // Build conversation history for the model.
+      // Corrections are stored on user message objects only for display purposes — they must not
+      // be injected back into user turns or the model will confuse its own output with user speech.
       const history = messages.map(msg => ({
         role: msg.sender === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.text + (msg.correction ? `\n\n---CORRECCIÓN---\n${msg.correction}` : '') }]
+        parts: [{ text: msg.text }]
       }));
 
       // Initialize stateful chat with history and system instruction

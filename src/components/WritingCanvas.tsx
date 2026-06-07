@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useLayoutEffect } from 'react';
 import { 
   Trash2, 
   Eye, 
@@ -34,6 +34,7 @@ export const WritingCanvas = ({ character, size = 250 }: WritingCanvasProps) => 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const activeTimeoutRef = useRef<any>(null);
+  const animFrameRef = useRef<number | null>(null);
 
   const [activeTab, setActiveTab] = useState<'canvas' | 'strokes'>('canvas');
   const [isDrawing, setIsDrawing] = useState(false);
@@ -49,22 +50,20 @@ export const WritingCanvas = ({ character, size = 250 }: WritingCanvasProps) => 
   const [animationState, setAnimationState] = useState<'idle' | 'playing' | 'paused'>('idle');
   const [currentStrokeIndex, setCurrentStrokeIndex] = useState(0);
 
-  // Helper to determine if a character is a Hiragana or Katakana
-  const isKana = (char: string) => {
-    if (!char) return false;
-    const code = char.charCodeAt(0);
-    return code >= 12352 && code <= 12543;
-  };
-
-  // Build the CDN URL for stroke order diagram
+  // Build the KanjiVG URL for stroke order diagram (covers kanji + kana)
   const getStrokeGuideUrl = (char: string) => {
     if (!char) return '';
-    if (isKana(char)) {
-      return `https://raw.githubusercontent.com/parsimonhi/animCJK/master/svgsJaKana/${char.charCodeAt(0)}.svg`;
-    } else {
-      return `https://kan-g.vnaka.dev/c/${char}`;
-    }
+    const code = char.codePointAt(0)!.toString(16).padStart(5, '0');
+    return `https://raw.githubusercontent.com/KanjiVG/kanjivg/master/kanji/${code}.svg`;
   };
+
+  // Cancel pending animation timers when the component unmounts
+  useEffect(() => {
+    return () => {
+      if (activeTimeoutRef.current) clearTimeout(activeTimeoutRef.current);
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    };
+  }, []);
 
   // Fetch SVG on mount or character change
   useEffect(() => {
@@ -81,7 +80,12 @@ export const WritingCanvas = ({ character, size = 250 }: WritingCanvasProps) => 
         const res = await fetch(url);
         if (!res.ok) throw new Error("Failed to fetch SVG");
         const xmlText = await res.text();
-        setSvgXml(xmlText);
+        // Strip XML declaration and DOCTYPE (cause visible text artifacts when set as innerHTML)
+        const cleaned = xmlText
+          .replace(/<\?xml[^>]*\?>/i, '')
+          .replace(/<!DOCTYPE[^[>]*(\[[^\]]*\])?\s*>/i, '')
+          .trim();
+        setSvgXml(cleaned);
       } catch (err) {
         console.error("Error fetching stroke guide SVG:", err);
       } finally {
@@ -197,6 +201,10 @@ export const WritingCanvas = ({ character, size = 250 }: WritingCanvasProps) => 
       clearTimeout(activeTimeoutRef.current);
       activeTimeoutRef.current = null;
     }
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
 
     setAnimationState('idle');
     setCurrentStrokeIndex(0);
@@ -206,8 +214,8 @@ export const WritingCanvas = ({ character, size = 250 }: WritingCanvasProps) => 
       paths.forEach((p) => {
         const path = p as SVGPathElement;
         path.style.transition = 'none';
-        path.style.strokeDasharray = 'none';
-        path.style.strokeDashoffset = 'none';
+        path.style.strokeDasharray = '';
+        path.style.strokeDashoffset = '';
         path.style.opacity = '1';
         path.style.stroke = '#475569';
         path.style.strokeWidth = '3.5';
@@ -215,11 +223,13 @@ export const WritingCanvas = ({ character, size = 250 }: WritingCanvasProps) => 
     }
   };
 
-  // Sync animation reset with tab mounts and XML changes
-  useEffect(() => {
-    // Small timeout to let React finish rendering the DOM ref before styling it
-    const t = setTimeout(resetAnimation, 30);
-    return () => clearTimeout(t);
+  // Inject SVG content directly into the container so React never re-applies innerHTML
+  // on animation-state re-renders (dangerouslySetInnerHTML would reset inline path styles).
+  useLayoutEffect(() => {
+    if (svgContainerRef.current) {
+      svgContainerRef.current.innerHTML = svgXml ?? '';
+    }
+    resetAnimation();
   }, [svgXml, activeTab]);
 
   const animateNextStroke = (index: number, paths: SVGPathElement[]) => {
@@ -238,51 +248,43 @@ export const WritingCanvas = ({ character, size = 250 }: WritingCanvasProps) => 
       length = 250; // robust fallback for unrendered/collapsed paths
     }
 
-    // Prepare path style for animation
+    // Set initial (invisible) state — no transition yet
     path.style.transition = 'none';
     path.style.strokeDasharray = `${length}`;
     path.style.strokeDashoffset = `${length}`;
     path.style.opacity = '1';
-    path.style.stroke = '#136964'; // highlight active stroke in teal
+    path.style.stroke = '#136964';
     path.style.strokeWidth = '6';
 
-    // Force reflow
-    path.getBoundingClientRect();
-
-    // Trigger transition
-    path.style.transition = 'stroke-dashoffset 0.8s linear';
-    path.style.strokeDashoffset = '0';
+    // Double rAF: first frame paints the initial hidden state,
+    // second frame starts the transition so the browser can animate correctly
+    animFrameRef.current = requestAnimationFrame(() => {
+      animFrameRef.current = requestAnimationFrame(() => {
+        path.style.transition = 'stroke-dashoffset 0.8s linear';
+        path.style.strokeDashoffset = '0';
+      });
+    });
 
     const handleEnd = () => {
-      // Completed style
-      path.style.stroke = '#1e293b'; // dark slate
+      path.style.transition = 'none';
+      path.style.stroke = '#1e293b';
       path.style.strokeWidth = '4';
       animateNextStroke(index + 1, paths);
     };
 
-    activeTimeoutRef.current = setTimeout(handleEnd, 850);
+    // 900ms = 800ms transition + ~33ms double-rAF delay + 67ms buffer
+    activeTimeoutRef.current = setTimeout(handleEnd, 900);
   };
 
-  // Helper to extract active stroke paths (excluding defs and masks)
+  // Helper to extract stroke paths (excluding defs and clipPath containers)
   const getStrokePaths = (): SVGPathElement[] => {
     const allPaths = svgContainerRef.current?.querySelectorAll('path');
     const filtered: SVGPathElement[] = [];
-    
+
     if (allPaths) {
       allPaths.forEach((p) => {
         const path = p as SVGPathElement;
-        // Exclude paths inside definitions or clipPaths
-        if (path.closest('defs') || path.closest('clipPath')) {
-          return;
-        }
-        
-        // For AnimCJK Kanas, select only the clipping skeleton stroke paths
-        if (isKana(character)) {
-          if (!path.getAttribute('clip-path')) {
-            return;
-          }
-        }
-        
+        if (path.closest('defs') || path.closest('clipPath')) return;
         filtered.push(path);
       });
     }
@@ -308,21 +310,24 @@ export const WritingCanvas = ({ character, size = 250 }: WritingCanvasProps) => 
   };
 
   const handlePause = () => {
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
     if (activeTimeoutRef.current) {
       clearTimeout(activeTimeoutRef.current);
       activeTimeoutRef.current = null;
     }
-    
-    // Freeze the current stroke dashoffset
+
+    // Freeze the current stroke at its current animated position
     const paths = getStrokePaths();
     if (paths[currentStrokeIndex]) {
       const path = paths[currentStrokeIndex];
-      const computedStyle = window.getComputedStyle(path);
-      const currentOffset = computedStyle.strokeDashoffset;
+      const currentOffset = window.getComputedStyle(path).strokeDashoffset;
       path.style.transition = 'none';
       path.style.strokeDashoffset = currentOffset;
     }
-    
+
     setAnimationState('paused');
   };
 
@@ -630,6 +635,17 @@ export const WritingCanvas = ({ character, size = 250 }: WritingCanvasProps) => 
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Off-screen SVG kept in DOM so evaluateCalligraphy can access paths.
+              innerHTML is managed by useLayoutEffect to avoid React resetting it on re-renders. */}
+          {svgXml && (
+            <div
+              ref={svgContainerRef}
+              className="kanjivg-svg"
+              style={{ position: 'absolute', left: '-9999px', width: size, height: size, pointerEvents: 'none' }}
+              aria-hidden="true"
+            />
+          )}
         </div>
       ) : (
         /* TAB 2: ACTIVE STROKE ANIMATION PLAYER */
@@ -651,10 +667,9 @@ export const WritingCanvas = ({ character, size = 250 }: WritingCanvasProps) => 
                 Cargando guía...
               </div>
             ) : svgXml ? (
-              /* Inline SVG Container */
-              <div 
+              /* Inline SVG Container — innerHTML managed by useLayoutEffect, not dangerouslySetInnerHTML */
+              <div
                 ref={svgContainerRef}
-                dangerouslySetInnerHTML={{ __html: svgXml }}
                 className="kanjivg-svg w-[85%] h-[85%] object-contain z-10"
               />
             ) : (
@@ -665,7 +680,7 @@ export const WritingCanvas = ({ character, size = 250 }: WritingCanvasProps) => 
 
             <div className="absolute bottom-3 text-center w-full z-10">
               <span className="text-[9px] font-bold text-on-surface-variant/40 uppercase tracking-widest select-none">
-                {isKana(character) ? 'ORDEN ANIMADO (AnimCJK)' : 'ORDEN ANIMADO (KanjiVG)'}
+                ORDEN DE TRAZOS (KanjiVG)
               </span>
             </div>
           </div>
@@ -704,10 +719,7 @@ export const WritingCanvas = ({ character, size = 250 }: WritingCanvasProps) => 
 
           {/* Calligraphy Help Subtext */}
           <p className="mt-3 text-[11px] text-on-surface-variant text-center leading-relaxed font-medium bg-surface-container-low/30 border border-surface-container-high/40 rounded-xl px-4 py-2.5 w-full">
-            {isKana(character) 
-              ? 'Haz clic en "Animar" para ver los trazos dibujarse en su orden de colores exacto (primero al último).'
-              : 'Haz clic en "Animar" para ver cómo fluye la dirección de las líneas según el número de trazos oficial.'
-            }
+            Haz clic en "Animar" para ver cómo fluye la dirección de los trazos según el orden oficial.
           </p>
         </div>
       )}
